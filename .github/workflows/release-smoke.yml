@@ -1,0 +1,30 @@
+name: Release smoke tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-smoke:
+    name: Offline packaging checks (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile source without importing Windows-specific packages
+        run: python -m compileall -q autocontinue tests
+      - name: Check bilingual docs, controls, exclusions, and screenshots
+        run: python -m unittest discover -s tests -p 'test_release.py' -v
+
+# These are static/offline checks, NOT a Windows installation, live-browser,
+# MCP authorization, security, or endurance certification.
