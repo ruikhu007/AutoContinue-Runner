@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>续推运行器 · 控制台</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1d2330; --quiet: #667085; --line: #e3e6eb;
+  --accent: #2f6fde; --accent-soft: #e8f0fd;
+  --warn: #c2620a; --warn-soft: #fff3e3; --bad: #c4321f; --bad-soft: #fdeceb; --good: #1f8a4c; --good-soft: #e7f6ed;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #14171c; --panel: #1c2027; --ink: #e8ebf0; --quiet: #98a1b0; --line: #2c323c;
+          --accent: #6b9cf0; --accent-soft: #1f2b40; --warn: #f0a35a; --warn-soft: #3a2a17;
+          --bad: #f07a6a; --bad-soft: #3d1f1c; --good: #5cc98b; --good-soft: #17301f; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+       font: 14px/1.55 "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
+         padding: 12px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+header h1 { font-size: 17px; margin: 0; font-weight: 650; }
+.conn { display: inline-flex; align-items: center; gap: 6px; color: var(--quiet); font-size: 13px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); }
+.dot.off { background: var(--bad); }
+.spacer { flex: 1; }
+main { max-width: 1120px; margin: 0 auto; padding: 20px 24px 60px; display: grid; gap: 20px; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+section > h2 { font-size: 15px; margin: 0 0 12px; font-weight: 650; display: flex; align-items: center; gap: 10px; }
+h2 .hint { font-weight: 400; color: var(--quiet); font-size: 13px; }
+button { font: inherit; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+         padding: 6px 14px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); font-weight: 600; }
+button.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); font-weight: 600; }
+button.big { padding: 9px 18px; font-size: 15px; }
+.empty { color: var(--quiet); padding: 8px 0; }
+.card { border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; margin-bottom: 12px; }
+.card:last-child { margin-bottom: 0; }
+.card.paused { border-color: var(--warn); background: var(--warn-soft); }
+.card.done { border-color: var(--good); }
+.card.error { border-color: var(--bad); }
+.row1 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.name { font-weight: 650; font-size: 15px; }
+.meta { color: var(--quiet); font-size: 12.5px; }
+.badge { font-size: 12.5px; padding: 1px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent);
+         font-weight: 600; }
+.badge.paused { background: var(--warn); color: #fff; }
+.badge.done { background: var(--good-soft); color: var(--good); }
+.badge.error, .badge.stopped { background: var(--bad-soft); color: var(--bad); }
+.stats { display: flex; gap: 22px; margin: 10px 0 6px; flex-wrap: wrap; }
+.stat b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--quiet); font-size: 12px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 4px 0 10px; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.reason { padding: 8px 10px; border-radius: 7px; background: var(--bg); font-size: 13.5px; }
+.paused .reason { background: var(--panel); border-left: 3px solid var(--warn); }
+.ops { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.log { margin-top: 12px; display: none; }
+.log.open { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--quiet); font-weight: 500; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.path { font-family: var(--mono); font-size: 12px; color: var(--quiet); word-break: break-all; margin-top: 6px; }
+form { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+form .full { grid-column: 1 / -1; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--quiet); }
+select, input, textarea { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+                          border-radius: 7px; padding: 7px 9px; width: 100%; }
+textarea { min-height: 120px; resize: vertical; }
+.radios { display: flex; gap: 18px; color: var(--ink); flex-wrap: wrap; }
+.radios label { display: flex; gap: 6px; align-items: center; color: var(--ink); font-size: 14px; }
+.radios input { width: auto; }
+.msg { font-size: 13px; }
+.msg.err { color: var(--bad); }
+#events { font-size: 13px; max-height: 260px; overflow: auto; }
+#events div { padding: 3px 0; border-bottom: 1px dashed var(--line); }
+#events .t { color: var(--quiet); font-family: var(--mono); font-size: 12px; margin-right: 8px; }
+#events .pause { color: var(--warn); } #events .error { color: var(--bad); } #events .done { color: var(--good); }
+.down { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 9; }
+.down.show { display: flex; }
+.down div { background: var(--panel); padding: 24px 28px; border-radius: 12px; max-width: 420px; }
+.badge.mode { background: var(--bg); color: var(--quiet); border: 1px solid var(--line); font-weight: 500; }
+details.hist summary { cursor: pointer; color: var(--quiet); font-size: 14px; }
+details.lim { margin-top: 8px; font-size: 13px; color: var(--quiet); }
+details.lim summary { cursor: pointer; }
+details.lim .lrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 8px; }
+details.lim label { font-size: 12.5px; }
+details.lim input { width: 110px; }
+details.hist[open] summary { margin-bottom: 10px; }
+details.hist td { font-size: 12.5px; }
+details.hist .path { margin: 0; }
+.modes { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+.modes label { display: block; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; color: var(--ink); }
+.modes label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.modes b { font-size: 14px; } .modes small { display: block; color: var(--quiet); font-size: 12.5px; margin-top: 2px; }
+.modes input { width: auto; margin-right: 6px; }
+@media (max-width: 720px) { .modes { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { form { grid-template-columns: 1fr; } header, main { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>续推运行器 · 控制台</h1>
+  <span class="conn"><span class="dot" id="dot"></span><span id="conn">已连接</span></span>
+  <span class="spacer"></span>
+  <label style="display:flex;align-items:center;gap:6px"><span data-l10n="language">语言 / Language</span><select id="language" aria-label="Language" style="min-width:110px;width:auto"><option value="zh">中文</option><option value="en">English</option></select></label>
+  <button class="warn big" onclick="post('/pause_all')">全部暂停</button>
+  <button class="bad big" onclick="stopAll()">全部结束</button>
+  <button class="bad" onclick="shutdown()">关闭运行器</button>
+</header>
+
+<main>
+  <section>
+    <h2>进行中的会话 <span class="hint">每 1.5 秒刷新 · 热键 Ctrl+Alt+P 全部暂停 / Ctrl+Alt+R 全部恢复</span></h2>
+    <div id="sessions"><div class="empty">没有进行中的会话。在下面新建一个。</div></div>
+    <details class="hist" id="hist" style="margin-top:12px">
+      <summary id="histSum">历史记录（已结束的会话，0 个）</summary>
+      <div id="histBody"></div>
+    </details>
+  </section>
+
+  <section>
+    <h2>新建会话 <span class="hint">目标须在调试浏览器里打开</span></h2>
+    <form id="form" onsubmit="start(event)">
+      <label class="full">直接粘贴对话网址（推荐）
+        <input id="url" placeholder="例如 https://arena.ai/c/…　运行器会在专用浏览器里找到这个页面，没打开就自动打开；站点画像按网址自动选择">
+      </label>
+      <label class="full">或者从专用浏览器已打开的标签页里选
+        <div style="display:flex;gap:8px">
+          <select id="target"></select>
+          <button type="button" style="flex:none;white-space:nowrap" onclick="loadTargets()">刷新</button>
+        </div>
+      </label>
+      <label>站点画像 <select id="profile"></select></label>
+      <label>会话名称 <input id="name" placeholder="例如：ChatGPT 测试"></label>
+      <div class="full radios">
+        <label><input type="radio" name="mode" value="new" checked> 新任务：发送下方任务说明（自动附加推进协议）</label>
+        <label><input type="radio" name="mode" value="takeover"> 接管已有对话</label>
+      </div>
+      <div class="full modes">
+        <label><input type="radio" name="tmode" value="steps" checked><b>有限步骤推理</b>
+          <small>有既定步骤的任务。模型先列出全部 N 步，每步结束写【步骤完成 n/N】，做完写【全部完成】。</small></label>
+        <label><input type="radio" name="tmode" value="open"><b>开放式推理</b>
+          <small>事先不知道要做多少步，如持续全网检索、开放式改进。模型每轮结束写【本轮完成】，确认没有可做的内容时写【全部完成】，可连续跑一整夜甚至几天。</small></label>
+      </div>
+      <label class="full">任务说明 <textarea id="task" placeholder="写清楚最终目标；运行器会按上面选择的任务类型附加推进协议。"></textarea></label>
+      <label>最大推进轮次 <input id="rounds" type="number" min="1" max="5000" value="40"></label>
+      <label>最长运行时间（小时） <input id="hours" type="number" min="0.5" max="240" step="0.5" value="6"></label>
+      <label>单轮最长时间（分钟） <input id="turnmin" type="number" min="5" max="1440" step="5" value="60"
+        title="一轮回答（含思考）最多等多久。超过后只要模型还在输出就继续等，毫无动静才暂停"></label>
+      <label>模型输出【需要人类】时
+        <select id="human"><option value="pause">暂停叫人</option><option value="auto">自动采纳推荐方案</option></select>
+      </label>
+      <div class="full" style="display:flex;gap:12px;align-items:center">
+        <button class="primary big" type="submit">挂载并启动</button>
+        <span class="msg" id="formMsg"></span>
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <h2>事件</h2>
+    <div id="events"><div class="empty">暂无事件</div></div>
+  </section>
+</main>
+
+<div class="down" id="down"><div><b>运行器已关闭</b><p class="meta">所有会话已结束。需要时双击桌面上的“续推运行器”重新打开。</p></div></div>
+
+<script>
+// UI-only localization. Protocol and API payloads retain their canonical markers.
+const translations = {
+  '续推运行器 · 控制台':'AutoContinue Runner · Dashboard',
+  '已连接':'Connected','运行器未连接':'Runner offline',
+  '语言 / Language':'Language',
+  '全部暂停':'Pause all','全部结束':'Stop all','关闭运行器':'Shut down runner',
+  '进行中的会话':'Active sessions','每 1.5 秒刷新 · 热键 Ctrl+Alt+P 全部暂停 / Ctrl+Alt+R 全部恢复':'Refresh every 1.5s · Ctrl+Alt+P pause all / Ctrl+Alt+R resume all',
+  '没有进行中的会话。在下面新建一个。':'No active sessions. Create one below.',
+  '历史记录（已结束的会话，0 个）':'History (0 finished sessions)',
+  '新建会话':'New session','目标须在调试浏览器里打开':'Open the target in the dedicated browser',
+  '直接粘贴对话网址（推荐）':'Paste conversation URL (recommended)',
+  '或者从专用浏览器已打开的标签页里选':'Or choose an open tab in the dedicated browser',
+  '刷新':'Refresh','站点画像':'Site profile','会话名称':'Session name',
+  '新任务：发送下方任务说明（自动附加推进协议）':'New task: send the instructions below (continuation protocol appended)',
+  '接管已有对话':'Continue existing conversation',
+  '有限步骤推理':'Finite-step task','开放式推理':'Open-ended task',
+  '有既定步骤的任务。模型先列出全部 N 步，每步结束写【步骤完成 n/N】，做完写【全部完成】。':'Tasks with a known number of steps. The model lists N steps and ends each step with 【步骤完成 n/N】, and the task with 【全部完成】.',
+  '事先不知道要做多少步，如持续全网检索、开放式改进。模型每轮结束写【本轮完成】，确认没有可做的内容时写【全部完成】，可连续跑一整夜甚至几天。':'Tasks with an unknown number of steps, such as ongoing research. The model ends each round with 【本轮完成】 and the task with 【全部完成】. Sessions can run overnight.',
+  '任务说明':'Task instructions','最大推进轮次':'Maximum rounds','最长运行时间（小时）':'Maximum runtime (hours)',
+  '单轮最长时间（分钟）':'Maximum time per round (minutes)',
+  '模型输出【需要人类】时':'When the model outputs 【需要人类】',
+  '暂停叫人':'Pause for human','自动采纳推荐方案':'Automatically accept recommendation',
+  '挂载并启动':'Attach and start','事件':'Events','暂无事件':'No events',
+  '运行器已关闭':'Runner has shut down','所有会话已结束。需要时双击桌面上的“续推运行器”重新打开。':'All sessions have ended. Relaunch AutoContinue Runner from your desktop when needed.',
+  '开放式':'Open-ended','有限步骤':'Finite-step','已推进':'Completed rounds','步骤进度':'Step progress',
+  '推进轮次':'Rounds','运行时长':'Elapsed time','最近规则':'Latest rule','等待第一次判定':'Waiting for first decision',
+  '最大轮次':'Max rounds','单轮最长（分钟）':'Max round (min)','总时长（小时）':'Total hours',
+  '保存':'Save','暂停':'Pause','恢复':'Resume','单步推进':'Advance one step','结束':'Stop',
+  '收起记录':'Hide log','查看记录':'View log','轮':'Round','判定':'Decision','规则':'Rule','原因':'Reason',
+  '回答':'Response','耗时':'Elapsed','还没有完成的轮次':'No completed rounds yet','记录目录：':'Output directory: ',
+  '结束时间':'End time','名称':'Name','类型':'Type','结果':'Result','轮次 / 进度':'Rounds / progress',
+  '最后原因':'Last reason','还没有结束的会话':'No finished sessions',
+  '完成':'Completed','人工结束':'Manually stopped','出错':'Error','已停止':'Stopped',
+  '自动（按网址识别）':'Auto-detect from URL','（未实测）':' (unverified)','（无站点画像）':' (no matching profile)',
+  '没有找到目标':'No targets found','新任务需要填写任务说明':'Task instructions are required for a new task',
+  '请粘贴对话网址，或选一个标签页':'Paste a conversation URL or choose a tab',
+  '正在找到 / 打开这个页面…':'Finding/opening this page…','正在挂载…':'Attaching…',
+  '已启动':'Started','启动失败：':'Start failed: ','保存失败：':'Save failed: ',
+  '结束全部会话？':'Stop all sessions?','结束全部会话并关闭运行器？':'Stop all sessions and shut down the runner?',
+  '结束这个会话？':'Stop this session?',
+  '例如 https://arena.ai/c/…　运行器会在专用浏览器里找到这个页面，没打开就自动打开；站点画像按网址自动选择':'e.g. https://arena.ai/c/… — opens this conversation in the dedicated browser and detects the site profile',
+  '例如：ChatGPT 测试':'e.g. ChatGPT test',
+  '写清楚最终目标；运行器会按上面选择的任务类型附加推进协议。':'Describe the intended outcome. A continuation protocol will be appended for the chosen task type.',
+  '一轮回答（含思考）最多等多久。超过后只要模型还在输出就继续等，毫无动静才暂停':'Per-round timeout, including reasoning. Continue waiting while new output arrives; pause if generation becomes idle.',
+  '上限：最多 ':'Limits: up to ',' 轮 · 单轮最长 ':' rounds · max round ',' 分钟 · 总时长 ':' min · total ',' 小时（点此调整，立即生效）':' hours (click to edit; applies immediately)',
+  ' 字':' chars',' 秒':' sec',' 轮':' rounds',
+  '历史记录（已结束的会话，':'History (',' 个）':' finished sessions)',
+};
+const placeholders = new WeakMap();
+let uiLanguage = 'zh';
+let translating = false;
+function localText(source) {
+  if (uiLanguage !== 'en') return source;
+  // Longest phrase first preserves compound phrases and numeric interpolations.
+  // Preserve complete fixed-string translations before splitting control tokens.
+  if (Object.prototype.hasOwnProperty.call(translations, String(source))) return translations[String(source)];
+  // Control tokens are a machine protocol: never translate inside 【...】.
+  return String(source).split(/(【[^】]*】)/g).map(part =>
+    part.startsWith('【') && part.endsWith('】') ? part :
+      Object.entries(translations).sort((a,b) => b[0].length-a[0].length)
+        .reduce((out, [zh,en]) => out.split(zh).join(en), part)
+  ).join('');
+}
+function translateUI() {
+  if (translating) return;
+  translating = true;
+  try {
+    document.documentElement.lang = uiLanguage === 'en' ? 'en' : 'zh-CN';
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (!n.parentElement || ['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(n.parentElement.tagName)) continue;
+      const prev = placeholders.get(n);
+      const original = prev && n.nodeValue === prev.rendered ? prev.original : n.nodeValue;
+      const rendered = localText(original);
+      placeholders.set(n, {original, rendered});
+      if (n.nodeValue !== rendered) n.nodeValue = rendered;
+    }
+    for (const e of document.querySelectorAll('[placeholder],[title]')) {
+      for (const attr of ['placeholder','title']) {
+        if (!e.hasAttribute(attr)) continue;
+        const key = '__l10n_'+attr;
+        if (!e[key] || e.getAttribute(attr) !== e[key].rendered) e[key] = {original:e.getAttribute(attr)};
+        const rendered = localText(e[key].original);
+        e[key].rendered = rendered;
+        if (e.getAttribute(attr) !== rendered) e.setAttribute(attr,rendered);
+      }
+    }
+    for (const option of document.querySelectorAll('option')) {
+      if (option.parentElement?.id === 'language') continue;
+      const original = option.__originalText ?? option.textContent;
+      if (option.__renderedText !== undefined && option.textContent !== option.__renderedText) option.__originalText = option.textContent;
+      else option.__originalText = original;
+      option.__renderedText = localText(option.__originalText);
+      if (option.textContent !== option.__renderedText) option.textContent = option.__renderedText;
+    }
+    document.title = localText('续推运行器 · 控制台');
+  } finally { translating = false; }
+}
+function setLanguage(value) {
+  uiLanguage = value === 'en' ? 'en' : 'zh';
+  document.getElementById('language').value = uiLanguage;
+  try { localStorage.setItem('acr.ui.language', uiLanguage); } catch (e) {}
+  translateUI();
+}
+try { uiLanguage = localStorage.getItem('acr.ui.language') === 'en' ? 'en' : 'zh'; } catch(e) {}
+document.getElementById('language').value = uiLanguage;
+document.getElementById('language').addEventListener('change', e => setLanguage(e.target.value));
+const localObserver = new MutationObserver(() => translateUI());
+localObserver.observe(document.body, {subtree:true, childList:true, characterData:true});
+translateUI();
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let evSeq = 0, openLogs = new Set(), targets = [], online = true;
+
+async function api(method, path, body) {
+  const r = await fetch(path, {method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+const post = (p) => api('POST', p).then(refresh).catch(e => alert(e.message));
+function stopAll() { if (confirm('结束全部会话？')) post('/stop_all'); }
+async function shutdown() {
+  if (!confirm('结束全部会话并关闭运行器？')) return;
+  try { await api('POST', '/shutdown'); } catch (e) {}
+  $('down').classList.add('show');
+}
+
+const STATE_CLASS = {'暂停叫人': 'paused', '结束': 'done', '出错': 'error', '已停止': 'stopped'};
+const fmt = (s) => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+                     return h ? `${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}` : `${m}:${String(x).padStart(2,'0')}`; };
+
+function card(s) {
+  const cls = STATE_CLASS[s.state] || '';
+  const ended = ['结束', '出错', '已停止'].includes(s.state);
+  let prog = '';
+  if (s.progress && s.task_mode !== 'open') { const [n, t] = s.progress.split('/').map(Number); prog = `<div class="bar"><i style="width:${Math.min(100, n / t * 100)}%"></i></div>`; }
+  return `<div class="card ${cls}" id="c-${s.id}">
+    <div class="row1"><span class="name">${esc(s.name)}</span><span class="badge ${cls}">${esc(s.state)}</span>
+      <span class="badge mode">${s.task_mode === 'open' ? '开放式' : '有限步骤'}</span>
+      <span class="meta">${esc(s.profile)} · ${esc(s.target)}</span></div>
+    <div class="stats">
+      <div class="stat"><b>${s.task_mode === 'open' ? (s.rounds + ' 轮') : esc(s.progress || '—')}</b><span>${s.task_mode === 'open' ? '已推进' : '步骤进度'}</span></div>
+      <div class="stat"><b>${s.rounds} / ${s.max_rounds}</b><span>推进轮次</span></div>
+      <div class="stat"><b>${fmt(s.runtime_s)}</b><span>运行时长</span></div>
+      <div class="stat"><b>${esc(s.last_rule || '—')}</b><span>最近规则</span></div>
+    </div>
+    ${prog}
+    <div class="reason">${esc(s.last_reason || '等待第一次判定')}</div>
+    <details class="lim" ${openLims.has(s.id) ? 'open' : ''} ontoggle="limToggle('${s.id}', this.open)">
+      <summary>上限：最多 ${s.max_rounds} 轮 · 单轮最长 ${s.max_turn_min ?? '—'} 分钟 · 总时长 ${s.max_runtime_h ?? '—'} 小时（点此调整，立即生效）</summary>
+      <div class="lrow">
+        <label>最大轮次 <input id="l-r-${s.id}" type="number" min="1" value="${s.max_rounds}"></label>
+        <label>单轮最长（分钟） <input id="l-t-${s.id}" type="number" min="5" step="5" value="${s.max_turn_min ?? ''}"></label>
+        <label>总时长（小时） <input id="l-h-${s.id}" type="number" min="0.5" step="0.5" value="${s.max_runtime_h ?? ''}"></label>
+        <button onclick="saveLimits('${s.id}')">保存</button>
+      </div>
+    </details>
+    <div class="ops">
+      <button onclick="post('/sessions/${s.id}/pause')" ${ended || s.paused ? 'disabled' : ''}>暂停</button>
+      <button onclick="post('/sessions/${s.id}/resume')" ${!s.paused || ended ? 'disabled' : ''}>恢复</button>
+      <button onclick="post('/sessions/${s.id}/step')" ${ended ? 'disabled' : ''}>单步推进</button>
+      <button class="bad" onclick="if(confirm('结束这个会话？'))post('/sessions/${s.id}/stop')" ${ended ? 'disabled' : ''}>结束</button>
+      <button onclick="toggleLog('${s.id}')">${openLogs.has(s.id) ? '收起记录' : '查看记录'}</button>
+    </div>
+    <div class="log ${openLogs.has(s.id) ? 'open' : ''}" id="log-${s.id}"></div>
+  </div>`;
+}
+
+const openLims = new Set();
+function limToggle(id, open) { open ? openLims.add(id) : openLims.delete(id); }
+async function saveLimits(id) {
+  const v = (k) => $(`l-${k}-${id}`).value;
+  try {
+    await api('POST', `/sessions/${id}/limits`, {max_rounds: v('r'), max_turn_min: v('t'), max_runtime_h: v('h')});
+    openLims.delete(id); refresh();
+  } catch (e) { alert('保存失败：' + e.message); }
+}
+
+function toggleLog(id) { openLogs.has(id) ? openLogs.delete(id) : openLogs.add(id); refresh(); }
+
+async function loadLog(id) {
+  const d = await api('GET', `/sessions/${id}/log?tail=15`);
+  const rows = d.rounds.slice().reverse().map(r => `<tr><td class="n">${r.round}</td><td>${esc(r.action)}</td>
+    <td class="n">${esc(r.rule)}</td><td>${esc(r.reason)}</td><td class="n">${r.chars} 字</td><td class="n">${r.elapsed_s ?? ''} 秒</td></tr>`).join('');
+  const el = $('log-' + id);
+  if (el) el.innerHTML = (rows ? `<table><tr><th>轮</th><th>判定</th><th>规则</th><th>原因</th><th>回答</th><th>耗时</th></tr>${rows}</table>`
+                               : '<div class="empty">还没有完成的轮次</div>') + `<div class="path">记录目录：${esc(d.status.output_dir)}</div>`;
+}
+
+async function refresh() {
+  try {
+    const list = await api('GET', '/sessions');
+    setOnline(true);
+    // 正在调整上限时不重绘卡片，免得输入被刷掉
+    const editing = document.activeElement && document.activeElement.closest && document.activeElement.closest('details.lim');
+    if (!editing) $('sessions').innerHTML = list.length ? list.slice().reverse().map(card).join('') : '<div class="empty">没有进行中的会话。在下面新建一个。</div>';
+    await loadHistory();
+    for (const id of openLogs) loadLog(id).catch(() => {});
+    const evs = await api('GET', '/events?after=' + evSeq);
+    if (evs.length) {
+      const box = $('events');
+      if (evSeq === 0) box.innerHTML = '';
+      for (const e of evs) {
+        evSeq = e.seq;
+        const div = document.createElement('div');
+        div.className = e.level;
+        div.innerHTML = `<span class="t">${esc((e.time || '').slice(11, 19))}</span>${esc(e.name)}：${esc(e.message)}`;
+        box.prepend(div);
+        if (e.level === 'pause' || e.level === 'done' || e.level === 'error') notify(e);
+      }
+    }
+  } catch (e) { setOnline(false); }
+}
+const RESULT = {'结束': '完成', '已停止': '人工结束', '出错': '出错'};
+async function loadHistory() {
+  const hist = await api('GET', '/archive?limit=100');
+  $('histSum').textContent = `历史记录（已结束的会话，${hist.length} 个）`;
+  if (!$('hist').open) return;
+  $('histBody').innerHTML = hist.length ? `<table><tr><th>结束时间</th><th>名称</th><th>类型</th><th>结果</th><th>轮次 / 进度</th><th>最后原因</th></tr>` +
+    hist.map(a => `<tr><td class="n">${esc((a.ended_at || '').replace('T', ' ').slice(5, 16))}</td><td>${esc(a.name)}</td>
+      <td>${a.task_mode === 'open' ? '开放式' : '有限步骤'}</td><td>${esc(RESULT[a.state] || a.state)}</td>
+      <td class="n">${a.rounds} 轮${a.progress ? ' · ' + esc(a.progress) : ''}</td>
+      <td>${esc(a.last_reason)}<div class="path">${esc(a.output_dir)}</div></td></tr>`).join('') + '</table>'
+    : '<div class="empty">还没有结束的会话</div>';
+}
+$('hist').addEventListener('toggle', () => loadHistory().catch(() => {}));
+
+function setOnline(on) {
+  if (on === online) return; online = on;
+  $('dot').className = 'dot' + (on ? '' : ' off');
+  $('conn').textContent = on ? '已连接' : '运行器未连接';
+}
+function notify(e) {
+  document.title = (e.level === 'done' ? '✓ ' : '⚠ ') + '续推运行器 · ' + e.message.slice(0, 20);
+  try { if (Notification.permission === 'granted') new Notification('续推运行器 · ' + e.name, {body: e.message}); } catch (x) {}
+}
+
+async function loadTargets() {
+  const [ts, ps] = await Promise.all([api('GET', '/targets'), api('GET', '/profiles')]);
+  targets = ts.filter(t => !t.error);
+  const errs = ts.filter(t => t.error).map(t => t.error);
+  $('target').innerHTML = targets.map((t, i) => `<option value="${i}">[${t.kind}] ${esc((t.title || '').slice(0, 40))} — ${esc((t.url || '').slice(0, 60))}${t.profiles && t.profiles.length ? '' : '（无站点画像）'}</option>`).join('')
+                          || `<option value="">${esc(errs[0] || '没有找到目标')}</option>`;
+  $('profile').innerHTML = '<option value="">自动（按网址识别）</option>' +
+    ps.map(p => `<option value="${esc(p.id)}">${esc(p.name || p.id)}${p.verified ? '' : '（未实测）'}</option>`).join('');
+  pickProfile();
+}
+function pickProfile() {
+  if ($('url').value.trim()) { $('profile').value = ''; return; }
+  const t = targets[$('target').value];
+  $('profile').value = t && t.profiles.length ? t.profiles[0] : '';
+}
+$('url').addEventListener('input', pickProfile);
+$('target').addEventListener('change', pickProfile);
+// 切换任务类型时给出合适的默认上限（用户改过的值不覆盖）
+const LIMITS = {steps: {rounds: 40, hours: 6, turn: 60}, open: {rounds: 500, hours: 72, turn: 120}};
+let lastMode = 'steps';
+for (const r of document.querySelectorAll('input[name=tmode]')) r.addEventListener('change', () => {
+  const m = r.value, prev = LIMITS[lastMode], next = LIMITS[m];
+  if (Number($('rounds').value) === prev.rounds) $('rounds').value = next.rounds;
+  if (Number($('hours').value) === prev.hours) $('hours').value = next.hours;
+  if (Number($('turnmin').value) === prev.turn) $('turnmin').value = next.turn;
+  lastMode = m;
+});
+
+async function start(ev) {
+  ev.preventDefault();
+  const url = $('url').value.trim();
+  const t = url ? null : targets[$('target').value];
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  const task = $('task').value.trim();
+  const msg = $('formMsg'); msg.className = 'msg';
+  if (mode === 'new' && !task) { msg.className = 'msg err'; msg.textContent = '新任务需要填写任务说明'; return; }
+  const task_mode = document.querySelector('input[name=tmode]:checked').value;
+  if (!url && !t) { msg.className = 'msg err'; msg.textContent = '请粘贴对话网址，或选一个标签页'; return; }
+  msg.textContent = url ? '正在找到 / 打开这个页面…' : '正在挂载…';
+  const spec = {profile_id: $('profile').value, target: t ? t.target : null, url: url || null, mode, task: task || null, task_mode,
+                name: $('name').value.trim() || null, max_rounds: Number($('rounds').value) || null,
+                max_runtime_h: Number($('hours').value) || null, max_turn_min: Number($('turnmin').value) || null,
+                on_need_human: $('human').value};
+  try { await api('POST', '/sessions', spec); msg.textContent = '已启动'; refresh(); }
+  catch (e) { msg.className = 'msg err'; msg.textContent = '启动失败：' + e.message; }
+}
+
+try { if (Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+loadTargets().catch(e => { $('target').innerHTML = `<option>${esc(e.message)}</option>`; });
+refresh();
+setInterval(refresh, 1500);
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# User data, authentication, and local installations — never publish
+runtime/
+chrome-profile/
+output/
+mcp.token
+*.token
+.env
+.env.*
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.log
+.DS_Store
+*.sqlite3
+*.db

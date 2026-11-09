@@ -1,0 +1,19 @@
+# DeepSeek 网页版。输入框与回答选择器按公开页面结构预填，尚未实测（verified: false）。
+# 未配置停止按钮，生成状态靠网络层（流式接口是否结束）+ 文本稳定判断。
+# 深度思考模式下思考过程可能也带 .ds-markdown，若误读请重新校准。
+id: deepseek_web
+name: DeepSeek 网页版
+kind: web
+verified: false
+match:
+  url_prefix: "https://chat.deepseek.com/"
+selectors:
+  input: "textarea#chat-input, textarea"
+  last_reply: ".ds-markdown"
+network:
+  stream_url_pattern: "chat/completion"
+input_method: insert_text
+submit: enter
+timing:
+  settle_ms: 4000
+  start_timeout_s: 60

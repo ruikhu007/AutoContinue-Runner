@@ -1,0 +1,65 @@
+# 续推运行器全局配置。所有项都有默认值，删掉某项即恢复默认。
+
+cdp_endpoint: "http://127.0.0.1:9230"   # 浏览器调试端口（9222 常被动作生成器占用，故默认 9230）
+chrome_path: null                       # 留空自动查找 Chrome / Edge
+chrome_user_data_dir: chrome-profile    # 专用浏览器配置目录（首次需在其中登录各家大模型）
+output_dir: output                      # 会话记录目录
+profiles_dir: profiles
+hotkeys: true                           # Ctrl+Alt+P 全部暂停，Ctrl+Alt+R 全部恢复
+
+# 常规推进词池：轮换使用，不连续重复
+phrases:
+  - 非常棒，让我们继续下一步。
+  - 太好了，让我们继续。
+  - 很好，请接着做下一步。
+  - 做得很好，继续推进吧。
+  - 非常好，按计划继续下一步。
+  - 不错，请继续。
+  - 很好，我们接着往下做。
+  - 完全认同，继续下一步吧。
+  - 思路很清晰，请继续推进。
+  - 好的，保持这个质量，进入下一步。
+
+# 特定情形的推进词；可用变量 {next} {total} {task_name}
+templates:
+  step:
+    - 非常棒，让我们继续第 {next} 步。
+    - 很好，请接着做第 {next} 步（共 {total} 步）。
+    - 太好了，进入第 {next} 步吧。
+  truncated:
+    - 请接着上面未完成的内容继续写，不要重复已写部分。
+  error:
+    - 刚才似乎中断了，请从上一步结束的地方继续。
+  question:
+    - 你来判断，按你认为最好的方案直接做，然后继续。
+    - 按你推荐的做法来，直接继续。
+  need_human_auto:
+    - 按你推荐的方案继续。
+
+protocol:
+  enabled: true          # 新任务时在任务说明后附加推进协议；接管时并入第一句推进词
+  remind_after: 2        # 连续 2 轮没有任何协议标记，就在推进词后追加一句提醒
+  # text: 可自定义协议全文（默认见程序内置）
+
+limits:
+  max_rounds: 40
+  max_runtime_h: 6
+  min_interval_s: 5
+  repeat_threshold: 0.9
+  repeat_rounds: 3
+  backoff_s: [60, 180, 600]
+
+behaviour:
+  on_need_human: pause         # 模型输出【需要人类】时：pause 暂停叫人 / auto 自动采纳推荐方案
+  on_question: continue        # 无标记但以提问结尾时：continue 让它自行决定 / pause 暂停
+  danger_check: true           # 回答中出现危险操作关键词时暂停（见程序内置列表，可在此用 danger_keywords 覆盖）
+  auto_pause_on_human_message: true
+
+notify:
+  beep: true
+  webhook: null                # 暂停 / 完成 / 出错时 POST JSON，可接天枢或动作打印机的消息通道
+
+server:
+  api_host: 127.0.0.1
+  api_port: 8765
+  mcp_port: 8766

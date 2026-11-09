@@ -1,0 +1,10 @@
+playwright>=1.40      # 只用来连接已打开的浏览器，不需要执行 playwright install
+pydantic>=2.5
+PyYAML>=6.0
+fastapi>=0.100
+uvicorn>=0.23
+mcp>=1.2              # AI 调用接口（mcp 1.x 与 2.x 均兼容）
+# 桌面应用适配（UIA 档、视觉档），仅 Windows
+uiautomation>=2.0.18; sys_platform == "win32"
+mss>=9.0; sys_platform == "win32"
+Pillow>=10.0; sys_platform == "win32"

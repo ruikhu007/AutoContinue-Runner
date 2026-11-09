@@ -1,0 +1,29 @@
+# 桌面 B 档示例：UI Automation 控件树。
+# 用 `python -m autocontinue dump-uia --title 元宝` 打印控件树，找到输入框、消息区、发送/停止按钮后填写下面的条件。
+# 条件可用：control_type（Edit/Button/Document/List/Text/Pane/Group…）、name、sub_name（名称包含）、
+#           automation_id、class_name、found_index（第几个）、depth（搜索深度，0 不限）。
+id: yuanbao_uia
+name: 腾讯元宝（UIA）
+kind: desktop
+tier: uia
+match:
+  process: "yuanbao.exe"        # 以 dump-uia 显示的进程名为准
+  title_contains: "元宝"
+uia:
+  input:
+    control_type: Edit
+  reply_area:
+    control_type: Document
+  send_button:
+    control_type: Button
+    sub_name: "发送"
+  stop_button:
+    control_type: Button
+    sub_name: "停止"
+input_method: uia_value        # 不抢焦点；写不进去时自动退回剪贴板粘贴
+submit: click
+timing:
+  settle_ms: 5000
+  poll_ms: 1000
+  start_timeout_s: 60
+  idle_user_s: 10

@@ -1,0 +1,29 @@
+# Claude 网页版（claude.ai，2026-11 界面）。2026-11-03 在 AI之家电脑上按真实页面（无痕对话）核对。
+#
+# claude.ai 的生成流由后台 worker 收发，页面脚本看不到普通网络请求，所以不配 network；
+# 改用页面内部状态属性判断，而不是看渲染出来的文字：
+#   生成中：回答节点 [data-testid=assistant-message][data-is-streaming=true]，或输入区出现停止按钮 chat-input-stop
+#   结束：  data-is-streaming 变为 false，停止按钮消失，再经稳定窗口确认
+# 输入框只认输入区 [data-cds=ChatComposer] 里的 [data-testid=chat-input]。
+id: claude_web
+name: Claude 网页版
+kind: web
+verified: true
+match:
+  url_prefix: "https://claude.ai/"
+selectors:
+  composer_root: "[data-cds=ChatComposer]"
+  input: "[data-testid=chat-input]"
+  send_button: "[data-testid=chat-input-send]"
+  stop_button: "[data-testid=chat-input-stop], [data-testid=assistant-message][data-is-streaming='true']"
+  last_reply: "[data-testid=assistant-message]"
+  user_message: "[data-testid=user-message]"
+  turn_container: "[data-transcript-row]"
+input_method: insert_text
+submit: click
+timing:
+  settle_ms: 3000
+  start_timeout_s: 60
+  poll_ms: 500
+  max_turn_min: 60
+notes: "以 data-is-streaming 与停止按钮为准；长思考时首字前可能较久无输出，start_timeout_s 只看是否出现停止按钮或流式标记。"

@@ -1,0 +1,35 @@
+# Arena 网页版（arena.ai，原 LMArena）· Direct 单模型对话。2026-11-05 在 AI之家电脑上按真实页面核对。
+#
+# 内部信号（不看渲染文字）：
+#   生成流：首轮 POST /nextjs-api/stream/create-evaluation，追问 POST /nextjs-api/stream/post-to-evaluation/{id}；
+#           请求在途 = 正在生成，关闭 = 输出结束
+#   发送 / 停止是同一个按钮 [data-perf-target=send]：生成中 aria-label="Stop generation"，空闲时 "Send message"
+# 消息列表 [data-perf-target=transcript] 是“最新在前”的倒序结构（flex-col-reverse），所以 newest_first: true。
+# 模型回答所在的整轮容器 = transcript 下不带 justify-end 的 div（用户消息那一轮带 justify-end）；
+# 里面依次是模型名、“Thought for …”思考过程、正式回答，协议标记在正式回答末尾。
+# 注意：Battle（两个匿名模型并排对比）模式结构不同，本画像只适用于 Direct 单模型对话。
+id: arena_web
+name: Arena 网页版（arena.ai）
+kind: web
+verified: true
+match:
+  url_prefix: "https://arena.ai/"
+selectors:
+  composer_root: "[data-perf-target=composer]"
+  input: "textarea[name=message]"
+  send_button: "[data-perf-target=send][aria-label='Send message']"
+  stop_button: "[data-perf-target=send][aria-label*='Stop']"
+  last_reply: "[data-perf-target=transcript] > div.w-full:not(.justify-end)"
+  user_message: "[data-perf-target=transcript] .bg-surface-raised .prose"
+  newest_first: true
+network:
+  stream_url_pattern: "/nextjs-api/stream/"
+  stream_method: POST
+input_method: insert_text
+submit: click
+timing:
+  settle_ms: 3000
+  start_timeout_s: 60
+  poll_ms: 500
+  max_turn_min: 60
+notes: "以生成流和发送/停止按钮状态为准；Direct 模式。"

@@ -1,0 +1,39 @@
+# ChatGPT 网页版（2026-11 新版界面）。2026-11-01/02 在 AI之家电脑上按真实页面核对。
+#
+# 生成是否结束不看页面渲染，而看两层内部信号：
+#   网络流：POST /backend-api/f/conversation（text/event-stream），请求在途 = 正在生成，关闭 = 输出结束
+#   数据层：/backend-api/conversation/{id}，确认最新一条是新的、已完成（finished_successfully + end_turn）的助手消息，并取完整原文
+# 页面上的停止按钮、轮次状态只在数据层不可用时（例如还没保存的新对话）兜底。
+#
+# 输入框只认对话输入区里的那个；回答中的文档块（也是 ProseMirror 可编辑区）一律排除。
+# 输入区有两种界面：普通对话是 form[data-chatgpt-composer]（输入框“询问 ChatGPT”）；
+# ChatGPT Work 是 form[data-composer-placement=thread][data-thread-find-composer]（输入框“使用 ChatGPT Work”），
+# 后者没有 data-chatgpt-composer，发送按钮也不在 data-composer-trailing-controls 里。2026-11-03 按真实页面补上。
+id: chatgpt_web
+name: ChatGPT 网页版
+kind: web
+verified: true
+match:
+  url_prefix: "https://chatgpt.com/"
+selectors:
+  composer_root: "[data-chatgpt-composer], form[data-composer-placement], form[data-thread-find-composer]"
+  input: "[data-composer-input] [contenteditable='true'], [contenteditable='true'][role='textbox'], #prompt-textarea"
+  send_button: "[data-composer-trailing-controls] button[aria-label='发送'], [data-composer-trailing-controls] button[aria-label='Send prompt'], [data-composer-trailing-controls] button[aria-label='Send'], form[data-composer-placement] button[aria-label='发送'], form[data-composer-placement] button[aria-label='Send prompt'], form[data-composer-placement] button[aria-label='Send']"
+  stop_button: "[data-composer-trailing-controls] button[aria-label*='停止'], [data-composer-trailing-controls] button[aria-label*='Stop'], form[data-composer-placement] button[aria-label*='停止'], form[data-composer-placement] button[aria-label*='Stop'], [data-talvt-turn-state]:not([data-talvt-turn-state='complete'])"
+  last_reply: "[data-chatgpt-selection-message-id]"
+  user_message: "[data-user-message-bubble]"
+  turn_container: "[data-talvt-turn-state]"
+network:
+  stream_url_pattern: "/backend-api/(f/)?conversation(/resume)?(\\?|$)"
+  stream_method: POST
+  data_layer: chatgpt
+input_method: insert_text
+submit: click
+timing:
+  settle_ms: 4000
+  auth_settle_ms: 1500
+  data_poll_s: 2
+  start_timeout_s: 60
+  poll_ms: 500
+  max_turn_min: 60
+notes: "思考强度 High 或长文时首字前可能长时间无输出；以网络流和数据层为准，不受页面渲染影响。"

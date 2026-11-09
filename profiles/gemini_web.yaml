@@ -1,0 +1,23 @@
+# Gemini 网页版。选择器按公开页面结构预填，尚未在你的电脑上实测（verified: false）。
+# 首次使用请先观察几轮；若不能正确识别，在控制台点“校准网页”重新生成本文件。
+id: gemini_web
+name: Gemini 网页版
+kind: web
+verified: false
+match:
+  url_prefix: "https://gemini.google.com/"
+selectors:
+  input: "rich-textarea .ql-editor, div.ql-editor[contenteditable='true']"
+  send_button: "button.send-button, button[aria-label*='Send'], button[aria-label*='发送']"
+  stop_button: "button[aria-label*='Stop'], button[aria-label*='停止']"
+  last_reply: "model-response"
+  user_message: "user-query"
+network:
+  stream_url_pattern: "StreamGenerate"
+input_method: insert_text
+submit: click
+timing:
+  settle_ms: 3000
+  start_timeout_s: 45
+  poll_ms: 500
+  max_turn_min: 60

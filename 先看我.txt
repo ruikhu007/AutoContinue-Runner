@@ -1,0 +1,13 @@
+续推运行器 AutoContinue Runner v0.4.1 / Quick Start
+
+中文：解压到固定目录，双击“安装.bat”，然后双击“启动续推运行器.bat”。
+在专用浏览器内登录大模型网站，打开 http://127.0.0.1:8765/ 。
+右上角切换中文 / English，粘贴对话网址，新建或接管任务。
+详细手册：README.md（中文）；README.en.md（English）。
+
+English: Extract the ZIP, run 安装.bat (Install), then 启动续推运行器.bat (Launch).
+Log in to AI sites in the dedicated browser and open http://127.0.0.1:8765/ .
+Switch to English via the language selector in the top right. Paste the conversation URL and start.
+Full manual: README.en.md. Quick start: QUICKSTART.md.
+
+安全 / Security: Keep local port 8765 private. Never publish browser profiles, tokens, or logs.

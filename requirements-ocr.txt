@@ -1,0 +1,4 @@
+# 可选：桌面视觉档读取协议标记用的中文 OCR（约 100MB）。需要时在程序目录运行：
+#   runtime\python.exe -m pip install -r requirements-ocr.txt -i https://mirrors.aliyun.com/pypi/simple
+numpy>=1.24
+rapidocr_onnxruntime>=1.3

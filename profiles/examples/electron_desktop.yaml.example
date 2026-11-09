@@ -1,0 +1,21 @@
+# 桌面 A 档示例：Electron / CEF 壳的桌面应用（是否支持需实测，例如腾讯元宝、豆包、Kimi 桌面版）。
+#
+# 1. 退出该应用，再用调试端口启动它，例如：
+#      "C:\路径\应用.exe" --remote-debugging-port=9333
+# 2. python -m autocontinue targets --endpoint http://127.0.0.1:9333
+#    能列出页面，说明支持 A 档；列不出来就改用视觉档（calibrate-desktop）。
+# 3. python -m autocontinue calibrate --endpoint http://127.0.0.1:9333 --target <上一步的 id 前缀> --id yuanbao_desktop --name 腾讯元宝桌面版
+#    校准会自动生成画像并写入 cdp_endpoint，之后与网页版用法完全相同。
+#
+# 下面是校准生成的文件大致样子（选择器为占位，请以校准结果为准）：
+id: yuanbao_desktop
+name: 腾讯元宝桌面版
+kind: web
+cdp_endpoint: "http://127.0.0.1:9333"
+match:
+  url_contains: ""
+selectors:
+  input: "<校准生成>"
+  last_reply: "<校准生成>"
+  send_button: "<校准生成>"
+  stop_button: "<校准生成>"
