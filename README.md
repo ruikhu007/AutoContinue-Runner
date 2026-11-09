@@ -1,4 +1,28 @@
-# 续推运行器 AutoContinue Runner v0.4.1 (中文 / English)
+# AutoContinue Runner — Keep AI App Tasks Moving
+
+**Turn AI chats into long-running agents.** / **让 AI 对话持续推进任务。**
+
+AutoContinue Runner is a **free, open-source Windows continuation supervisor** for supported AI chat applications. It watches a chat for completed responses, checks task/safety rules, and sends the next continuation prompt when appropriate. It works with existing **signed-in web apps, without a model API key for the continuation loop**. It does not create capabilities the underlying AI application lacks, bypass service limits, or guarantee task success.
+
+续推运行器是一款免费、开源的 Windows AI 对话续推工具：监测模型回答完成状态、检查任务与安全规则，并在适当时候自动推进下一轮，让已有网页 AI 应用可以在用户监督下执行更长的任务。无需为续推循环另行配置大模型 API 密钥；仍需正常登录对应 AI 网站，并遵守其使用规则。
+
+**[Windows download (pre-release)](https://github.com/ruikhu007/AutoContinue-Runner/releases) · [English manual](README.en.md) · [中文手册](#中文完整使用手册) · [Bilingual quick start](QUICKSTART.md) · [Launch / press kit](docs/PROMOTION_KIT.md)**
+
+### Why it matters / 为什么值得关注
+
+- **From chat to task continuity** — continue multi-round research, coding, drafting, and other tasks without manually typing “continue” after every completed answer.
+- **More than a blind timer** — task markers, response/stream-state checks, completion detection, anti-repeat logic, and human takeover / pause safeguards.
+- **Multiple supported web AI apps** — ChatGPT, Claude, and Arena web profiles have been tested in earlier environments. Other included profiles are preconfigured and require individual verification.
+- **Human and AI coordination** — local web dashboard, bilingual web UI, history logs, adjustable limits, and an optional MCP bridge for authorized agents.
+- **Windows first** — browser workflows are the primary tested path; native desktop-app automation remains experimental.
+
+**Real screenshots / 实际运行截图:** [session dashboard](docs/screenshots/real-run-session-dashboard.png) · [continuation log](docs/screenshots/real-run-event-log.jpg). These are historical real-world runs, not proof of a completed long-duration regression test of the bilingual pre-release.
+
+> **Pre-release / 预发布提醒:** The v0.4.1 bilingual build has not yet completed the full stable-release validation checklist. The browser-chat workflow requires an available signed-in session and normal service availability. Never expose the unauthenticated local control API on port **8765** to a network. Review [SECURITY.md](SECURITY.md) and [release acceptance checklist](docs/RELEASE_CHECKLIST.md). The Windows native Tk console is not yet fully translated; language switching applies to the web dashboard.
+
+---
+
+## 中文完整使用手册
 
 **English documentation:** [README.en.md](README.en.md) · **Quick start:** [QUICKSTART.md](QUICKSTART.md) · **License:** [MIT](LICENSE)
 
